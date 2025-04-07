@@ -8,7 +8,15 @@
 using namespace v8;
 using namespace node;
 
-void getErrorMsg(int code, std::string &str)
+int getError( a_sqlany_connection *conn, char *str, size_t len )
+/**************************************************************/
+{
+    int sqlcode;
+    sqlcode = api.sqlany_error( conn, str, len );
+    return sqlcode;
+}
+
+void getErrorMsg( int code, std::string &str )
 /********************************************/
 {
 	std::ostringstream message;
@@ -54,15 +62,15 @@ void getErrorMsg(int code, std::string &str)
 void getErrorMsg(a_sqlany_connection *conn, std::string &str)
 /*************************************************************/
 {
-	char buffer[SACAPI_ERROR_SIZE];
-	int rc;
-	rc = api.sqlany_error(conn, buffer, sizeof(buffer));
-	std::ostringstream message;
-	message << "Code: ";
-	message << rc;
-	message << " Msg: ";
-	message << buffer;
-	str = message.str();
+    char buffer[SACAPI_ERROR_SIZE];
+    int sqlcode;
+    sqlcode = getError( conn, buffer, sizeof(buffer) );
+    std::ostringstream message;
+    message << "Code: ";
+    message << sqlcode;
+    message << " Msg: ";
+    message << buffer;
+    str = message.str();
 }
 
 void throwError(a_sqlany_connection *conn)
