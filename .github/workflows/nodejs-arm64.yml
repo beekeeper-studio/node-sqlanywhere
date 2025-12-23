@@ -1,0 +1,51 @@
+name: Node.js CI - ARM64
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+
+jobs:
+  build-arm64:
+    name: Build and Test on Node 22.x - Linux ARM64
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build and Test on ARM64
+      uses: uraimo/run-on-arch-action@v2
+      with:
+        arch: aarch64
+        distro: ubuntu22.04
+
+        # Install dependencies in the container
+        install: |
+          apt-get update -q -y
+          apt-get install -q -y curl build-essential python3 git
+          # Install Node.js 22
+          curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+          apt-get install -q -y nodejs
+
+        # Run build and tests
+        run: |
+          echo "Running on ARM64 architecture"
+          node --version
+          npm --version
+
+          echo "Installing dependencies..."
+          npm install
+
+          echo "Running tests..."
+          npm test
+
+          echo "Verifying native module..."
+          if [ -f "build/Release/sqlanywhere.node" ]; then
+            echo "✓ Native module built successfully"
+            ls -lh build/Release/sqlanywhere.node
+            file build/Release/sqlanywhere.node
+          else
+            echo "✗ Native module NOT found"
+            exit 1
+          fi

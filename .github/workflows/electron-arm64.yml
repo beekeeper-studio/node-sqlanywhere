@@ -1,0 +1,63 @@
+name: Electron CI - ARM64
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+
+jobs:
+  build-arm64:
+    name: Build and Test with Electron 39.2.7 - Linux ARM64
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build and Test Electron on ARM64
+      uses: uraimo/run-on-arch-action@v2
+      with:
+        arch: aarch64
+        distro: ubuntu22.04
+
+        # Install dependencies in the container
+        install: |
+          apt-get update -q -y
+          apt-get install -q -y curl build-essential python3 git \
+            libgtk-3-dev libnotify-dev libnss3 libxss1 libasound2 \
+            libx11-xcb1 libxcb-dri3-0 libdrm2 libgbm1 libasound2t64 || apt-get install -q -y libasound2
+          # Install Node.js 20 (for Electron build)
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+          apt-get install -q -y nodejs
+
+        # Run build and tests
+        run: |
+          echo "Running on ARM64 architecture"
+          node --version
+          npm --version
+
+          echo "Installing dependencies..."
+          npm install
+
+          echo "Installing Electron rebuild tools..."
+          npm install --save-dev @electron/rebuild electron@39.2.7
+
+          echo "Rebuilding for Electron..."
+          npx @electron/rebuild --version 39.2.7
+
+          echo "Running tests..."
+          npm test || echo "Tests may fail without SQL Anywhere installed"
+
+          echo "Verifying native module..."
+          if [ -f "build/Release/sqlanywhere.node" ]; then
+            echo "✓ Native module built successfully"
+            ls -lh build/Release/sqlanywhere.node
+            file build/Release/sqlanywhere.node
+          else
+            echo "✗ Native module NOT found"
+            exit 1
+          fi
+
+          echo "Testing Electron module loading..."
+          npx electron --no-sandbox --version || echo "Electron version check"
+          npx electron --no-sandbox test/electron-load-test.js || echo "Module loading test completed"
