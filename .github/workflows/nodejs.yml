@@ -43,6 +43,20 @@ jobs:
     - name: Install npm dependencies
       run: npm install
 
+    - name: Show build output
+      shell: bash
+      run: |
+        echo "Checking for native module..."
+        if [ -f "build/Release/sqlanywhere.node" ]; then
+          echo "✓ Native module found"
+          ls -lh build/Release/sqlanywhere.node
+          file build/Release/sqlanywhere.node || true
+        else
+          echo "✗ Native module NOT found"
+          echo "Build directory contents:"
+          ls -la build/ || echo "Build directory does not exist"
+        fi
+
     - name: Run tests
       run: npm test
 
