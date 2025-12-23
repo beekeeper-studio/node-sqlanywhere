@@ -3,6 +3,9 @@ This is a Node.js driver written for [SAP SQL Anywhere](https://www.sap.com/prod
 
 [![NPM](https://nodei.co/npm/sqlanywhere.png?compact=true)](https://nodei.co/npm/sqlanywhere/)
 
+![Node.js CI](https://github.com/sqlanywhere/node-sqlanywhere/workflows/Node.js%20CI/badge.svg)
+![Electron CI](https://github.com/sqlanywhere/node-sqlanywhere/workflows/Electron%20CI/badge.svg)
+
 ## Install
 ```
 npm install sqlanywhere
@@ -215,6 +218,49 @@ conn.rollback(function(err) {
   console.log('Transaction rolled back.');
 });
 ```
+
+## Development and Testing
+
+### Running Tests
+
+The project includes a test suite that can be run with:
+
+```bash
+npm test
+```
+
+Tests verify:
+- Native module loading
+- Connection object creation
+- API availability
+- Basic error handling
+
+### CI/CD
+
+This project uses GitHub Actions for continuous integration. Tests are automatically run on:
+- Pull requests
+- Commits to master/main branches
+
+Tests run against:
+- **Node.js versions**: 18.x, 20.x, 22.x
+- **Electron versions**: 30.0.0, 32.0.0, 33.0.0, 39.2.7
+- **Operating systems**: Ubuntu, macOS, Windows
+
+### Building from Source
+
+To build the native module:
+
+```bash
+npm install
+```
+
+This will automatically compile the native addon using node-gyp.
+
+### Supported Versions
+
+Current version supports:
+- **Node.js**: 14.0.0 and higher
+- **Electron**: 30.0.0 and higher (tested up to 39.2.7)
 
 ## Resources
 + [SAP SQL Anywhere Documentation](http://dcx.sap.com/)

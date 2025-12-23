@@ -11,10 +11,14 @@
     "node": ">=14.0.0"
   },
   "scripts": {
-    "install": "node build.js"
+    "install": "node build.js",
+    "test": "mocha test/**/*.test.js --timeout 10000"
   },
   "dependencies": {
     "help": "^3.0.2",
     "nan": "^2.22.2"
+  },
+  "devDependencies": {
+    "mocha": "^10.2.0"
   }
 }
