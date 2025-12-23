@@ -24,9 +24,6 @@ jobs:
           # Linux x64
           - os: ubuntu-latest
             electron-version: '39.2.7'
-          # Linux ARM64
-          - os: ubuntu-latest-arm64
-            electron-version: '39.2.7'
           # Windows x64
           - os: windows-latest
             electron-version: '39.2.7'

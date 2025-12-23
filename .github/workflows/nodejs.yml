@@ -23,9 +23,6 @@ jobs:
           # Linux x64
           - os: ubuntu-latest
             node-version: 22.x
-          # Linux ARM64
-          - os: ubuntu-latest-arm64
-            node-version: 22.x
           # Windows x64
           - os: windows-latest
             node-version: 22.x
