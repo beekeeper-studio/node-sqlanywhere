@@ -14,7 +14,22 @@ jobs:
       fail-fast: false
       matrix:
         electron-version: ['39.2.7']
-        os: [ubuntu-latest]
+        include:
+          # macOS ARM64 (Apple Silicon)
+          - os: macos-latest
+            electron-version: '39.2.7'
+          # macOS x64 (Intel)
+          - os: macos-13
+            electron-version: '39.2.7'
+          # Linux x64
+          - os: ubuntu-latest
+            electron-version: '39.2.7'
+          # Linux ARM64
+          - os: ubuntu-latest-arm64
+            electron-version: '39.2.7'
+          # Windows x64
+          - os: windows-latest
+            electron-version: '39.2.7'
 
     steps:
     - name: Checkout code

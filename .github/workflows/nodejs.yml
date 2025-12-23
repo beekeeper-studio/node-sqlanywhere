@@ -13,8 +13,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [22.x]
-        os: [ubuntu-latest]
+        include:
+          # macOS ARM64 (Apple Silicon)
+          - os: macos-latest
+            node-version: 22.x
+          # macOS x64 (Intel)
+          - os: macos-13
+            node-version: 22.x
+          # Linux x64
+          - os: ubuntu-latest
+            node-version: 22.x
+          # Linux ARM64
+          - os: ubuntu-latest-arm64
+            node-version: 22.x
+          # Windows x64
+          - os: windows-latest
+            node-version: 22.x
 
     steps:
     - name: Checkout code
