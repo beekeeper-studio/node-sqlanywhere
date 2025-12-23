@@ -18,7 +18,7 @@ jobs:
           - os: macos-latest
             node-version: 22.x
           # macOS x64 (Intel)
-          - os: macos-13
+          - os: macos-14
             node-version: 22.x
           # Linux x64
           - os: ubuntu-latest
