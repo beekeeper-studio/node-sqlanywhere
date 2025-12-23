@@ -25,7 +25,8 @@ jobs:
           apt-get update -q -y
           apt-get install -q -y ca-certificates curl gnupg build-essential python3 git \
             libgtk-3-dev libnotify-dev libnss3 libxss1 \
-            libx11-xcb1 libxcb-dri3-0 libdrm2 libgbm1
+            libx11-xcb1 libxcb-dri3-0 libdrm2 libgbm1 \
+            xvfb dbus-x11
           # Try to install libasound2t64, fallback to libasound2
           apt-get install -q -y libasound2t64 || apt-get install -q -y libasound2
           # Install Node.js 20 (for Electron build)
@@ -52,6 +53,11 @@ jobs:
           echo "Rebuilding for Electron..."
           npx @electron/rebuild --version 39.2.7
 
+          echo "Starting virtual display for Electron..."
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          sleep 2
+
           echo "Running tests with Electron..."
           npx electron-mocha --no-sandbox test/**/*.test.js --timeout 10000
 
@@ -66,5 +72,5 @@ jobs:
           fi
 
           echo "Testing Electron module loading..."
-          npx electron --no-sandbox --version || echo "Electron version check"
-          npx electron --no-sandbox test/electron-load-test.js || echo "Module loading test completed"
+          npx electron --no-sandbox --version
+          npx electron --no-sandbox test/electron-load-test.js
