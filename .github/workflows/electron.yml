@@ -83,5 +83,5 @@ jobs:
     - name: Test module loading with Electron
       shell: bash
       run: |
-        npx electron --version
+        npx electron --no-sandbox --version
         npx electron --no-sandbox -e "console.log('Testing module load...'); const db = require('./lib/index'); console.log('Module loaded successfully'); const conn = db.createConnection(); console.log('Connection created:', typeof conn);"
