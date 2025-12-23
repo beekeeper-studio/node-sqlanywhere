@@ -23,9 +23,10 @@ jobs:
         # Install dependencies in the container
         install: |
           apt-get update -q -y
-          apt-get install -q -y ca-certificates curl gnupg build-essential python3 git
-          # Try to install libasound2t64, fallback to libasound2
-          apt-get install -q -y libasound2t64 || apt-get install -q -y libasound2
+          apt-get install -q -y ca-certificates curl gnupg build-essential python3 git \
+            libglib2.0-0 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2
+          # Try to install libasound2t64 if available
+          apt-get install -q -y libasound2t64 2>/dev/null || true
           # Install Node.js 20 (for Electron build)
           mkdir -p /etc/apt/keyrings
           curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
