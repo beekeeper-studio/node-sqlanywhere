@@ -122,7 +122,7 @@ private:
   static NODE_API_FUNC(drop);
 
   /// @internal
-  static void dropAfter(uv_work_t *req);
+  static void dropAfter(uv_work_t *req, int status);
   /// @internal
   static void dropWork(uv_work_t *req);
 

@@ -153,9 +153,9 @@ private:
     static Persistent<Function> constructor;
 
     /// @internal
-    static void noParamAfter(uv_work_t *req);
+    static void noParamAfter(uv_work_t *req, int status);
     /// @internal
-    static void connectAfter(uv_work_t *req);
+    static void connectAfter(uv_work_t *req, int status);
     /// @internal
     static void connectWork(uv_work_t *req);
     /// @internal
@@ -368,7 +368,7 @@ private:
     static NODE_API_FUNC(prepare);
 
     /// @internal
-    static void prepareAfter(uv_work_t *req);
+    static void prepareAfter(uv_work_t *req, int status);
     /// @internal
     static void prepareWork(uv_work_t *req);
 
