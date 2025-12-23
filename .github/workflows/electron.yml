@@ -76,22 +76,6 @@ jobs:
           ls -la build/ || echo "Build directory does not exist"
         fi
 
-    - name: Run tests with Electron
-      run: |
-        npm test
-      continue-on-error: true
-      id: test
-
-    - name: Show test results
-      if: always()
-      shell: bash
-      run: |
-        if [ "${{ steps.test.outcome }}" == "success" ]; then
-          echo "✓ Tests passed"
-        else
-          echo "✗ Tests failed (may be expected if SQL Anywhere is not installed)"
-        fi
-
     - name: Test module loading with Electron
       shell: bash
       run: |

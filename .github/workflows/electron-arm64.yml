@@ -47,13 +47,13 @@ jobs:
           npm install
 
           echo "Installing Electron rebuild tools..."
-          npm install --save-dev @electron/rebuild electron@39.2.7
+          npm install --save-dev @electron/rebuild electron@39.2.7 electron-mocha
 
           echo "Rebuilding for Electron..."
           npx @electron/rebuild --version 39.2.7
 
-          echo "Running tests..."
-          npm test || echo "Tests may fail without SQL Anywhere installed"
+          echo "Running tests with Electron..."
+          npx electron-mocha --no-sandbox test/**/*.test.js --timeout 10000
 
           echo "Verifying native module..."
           if [ -f "build/Release/sqlanywhere.node" ]; then
