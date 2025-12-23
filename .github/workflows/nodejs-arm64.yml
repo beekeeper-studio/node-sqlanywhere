@@ -20,6 +20,10 @@ jobs:
         arch: aarch64
         distro: ubuntu22.04
 
+        # Docker options to improve QEMU compatibility
+        dockerRunArgs: |
+          --platform linux/arm64/v8
+
         # Install dependencies in the container
         install: |
           apt-get update -q -y
@@ -38,6 +42,10 @@ jobs:
           echo "Running on ARM64 architecture"
           node --version
           npm --version
+
+          # Set environment variables to help with QEMU/node-gyp compatibility
+          export npm_config_jobs=1
+          export JOBS=1
 
           echo "Installing dependencies..."
           npm install
