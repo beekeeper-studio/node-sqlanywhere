@@ -84,4 +84,4 @@ jobs:
       shell: bash
       run: |
         npx electron --version
-        node -e "console.log('Testing module load...'); const db = require('./lib/index'); console.log('Module loaded successfully'); const conn = db.createConnection(); console.log('Connection created:', typeof conn);"
+        npx electron -e "console.log('Testing module load...'); const db = require('./lib/index'); console.log('Module loaded successfully'); const conn = db.createConnection(); console.log('Connection created:', typeof conn);"
