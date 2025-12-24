@@ -1,0 +1,12 @@
+# Don't include build artifacts in package/cache
+# These should be built on the target system
+build/
+bin/
+bin32/
+bin64/
+
+# Development files
+.github/
+test/
+*.log
+.DS_Store
