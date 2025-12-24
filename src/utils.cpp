@@ -758,7 +758,7 @@ bool cleanAPI()
 // Does not take any parameters.
 // Create custom Baton and Callback (After) functions otherwise
 
-void Connection::noParamAfter(uv_work_t *req)
+void Connection::noParamAfter(uv_work_t *req, int status)
 /*********************************************/
 {
 	Isolate *isolate = Isolate::GetCurrent();

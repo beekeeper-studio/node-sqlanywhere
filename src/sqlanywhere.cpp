@@ -193,7 +193,7 @@ void executeWork(uv_work_t *req)
     }
 }
 
-void executeAfter(uv_work_t *req)
+void executeAfter(uv_work_t *req, int status)
 /*********************************/
 {
     Isolate *isolate = Isolate::GetCurrent();
@@ -299,7 +299,7 @@ NODE_API_FUNC(StmtObject::exec)
 
         int status;
         status = uv_queue_work(uv_default_loop(), req, executeWork,
-                               (uv_after_work_cb)executeAfter);
+                               executeAfter);
         assert(status == 0);
 
         args.GetReturnValue().SetUndefined();
@@ -376,7 +376,7 @@ void getMoreResultsWork(uv_work_t *req)
     }
 }
 
-void getMoreResultsAfter(uv_work_t *req)
+void getMoreResultsAfter(uv_work_t *req, int status)
 /****************************************/
 {
     Isolate *isolate = Isolate::GetCurrent();
@@ -445,7 +445,7 @@ NODE_API_FUNC(StmtObject::getMoreResults)
 
         int status;
         status = uv_queue_work(uv_default_loop(), req, getMoreResultsWork,
-                               (uv_after_work_cb)getMoreResultsAfter);
+                               getMoreResultsAfter);
         assert(status == 0);
 
         args.GetReturnValue().SetUndefined();
@@ -571,7 +571,7 @@ NODE_API_FUNC(Connection::exec)
         baton->callback.Reset(isolate, callback);
         int status;
         status = uv_queue_work(uv_default_loop(), req, executeWork,
-                               (uv_after_work_cb)executeAfter);
+                               executeAfter);
         assert(status == 0);
 
         args.GetReturnValue().SetUndefined();
@@ -647,7 +647,7 @@ void Connection::prepareWork(uv_work_t *req)
     }
 }
 
-void Connection::prepareAfter(uv_work_t *req)
+void Connection::prepareAfter(uv_work_t *req, int status)
 /**********************************************/
 {
     Isolate *isolate = Isolate::GetCurrent();
@@ -749,7 +749,7 @@ NODE_API_FUNC(Connection::prepare)
         baton->StmtObj.Reset(isolate, p_stmt);
         int status;
         status = uv_queue_work(uv_default_loop(), req, prepareWork,
-                               (uv_after_work_cb)prepareAfter);
+                               prepareAfter);
         assert(status == 0);
 
         args.GetReturnValue().SetUndefined();
@@ -759,7 +759,7 @@ NODE_API_FUNC(Connection::prepare)
 
     prepareWork(req);
     bool err = baton->err;
-    prepareAfter(req);
+    prepareAfter(req, 0);
 
     if (err)
     {
@@ -877,7 +877,7 @@ void Connection::connectWork(uv_work_t *req)
     openConnections++;
 }
 
-void Connection::connectAfter(uv_work_t *req)
+void Connection::connectAfter(uv_work_t *req, int status)
 /**********************************************/
 {
     Isolate *isolate = Isolate::GetCurrent();
@@ -1018,14 +1018,14 @@ NODE_API_FUNC(Connection::connect)
 
         int status;
         status = uv_queue_work(uv_default_loop(), req, connectWork,
-                               (uv_after_work_cb)connectAfter);
+                               connectAfter);
         assert(status == 0);
         args.GetReturnValue().SetUndefined();
         return;
     }
 
     connectWork(req);
-    connectAfter(req);
+    connectAfter(req, 0);
     args.GetReturnValue().SetUndefined();
     return;
 }
@@ -1104,7 +1104,7 @@ NODE_API_FUNC(Connection::disconnect)
 
         int status;
         status = uv_queue_work(uv_default_loop(), req, disconnectWork,
-                               (uv_after_work_cb)noParamAfter);
+                               noParamAfter);
         assert(status == 0);
 
         args.GetReturnValue().SetUndefined();
@@ -1112,7 +1112,7 @@ NODE_API_FUNC(Connection::disconnect)
     }
 
     disconnectWork(req);
-    noParamAfter(req);
+    noParamAfter(req, 0);
     args.GetReturnValue().SetUndefined();
     return;
 }
@@ -1178,7 +1178,7 @@ NODE_API_FUNC(Connection::commit)
 
         int status;
         status = uv_queue_work(uv_default_loop(), req, commitWork,
-                               (uv_after_work_cb)noParamAfter);
+                               noParamAfter);
         assert(status == 0);
 
         args.GetReturnValue().SetUndefined();
@@ -1186,7 +1186,7 @@ NODE_API_FUNC(Connection::commit)
     }
 
     commitWork(req);
-    noParamAfter(req);
+    noParamAfter(req, 0);
     args.GetReturnValue().SetUndefined();
     return;
 }
@@ -1252,7 +1252,7 @@ NODE_API_FUNC(Connection::rollback)
 
         int status;
         status = uv_queue_work(uv_default_loop(), req, rollbackWork,
-                               (uv_after_work_cb)noParamAfter);
+                               noParamAfter);
         assert(status == 0);
 
         args.GetReturnValue().SetUndefined();
@@ -1260,7 +1260,7 @@ NODE_API_FUNC(Connection::rollback)
     }
 
     rollbackWork(req);
-    noParamAfter(req);
+    noParamAfter(req, 0);
     args.GetReturnValue().SetUndefined();
     return;
 }
@@ -1295,7 +1295,7 @@ struct dropBaton
     }
 };
 
-void StmtObject::dropAfter(uv_work_t *req)
+void StmtObject::dropAfter(uv_work_t *req, int status)
 /*******************************************/
 {
     Isolate *isolate = Isolate::GetCurrent();
@@ -1368,7 +1368,7 @@ NODE_API_FUNC(StmtObject::drop)
 
         int status;
         status = uv_queue_work(uv_default_loop(), req, dropWork,
-                               (uv_after_work_cb)dropAfter);
+                               dropAfter);
         assert(status == 0);
 
         args.GetReturnValue().SetUndefined();
@@ -1376,7 +1376,7 @@ NODE_API_FUNC(StmtObject::drop)
     }
 
     dropWork(req);
-    dropAfter(req);
+    dropAfter(req, 0);
     args.GetReturnValue().SetUndefined();
     return;
 }
@@ -1385,7 +1385,7 @@ void init(Local<Object> exports)
 /********************************/
 {
     uv_mutex_init(&api_mutex);
-    Isolate *isolate = exports->GetIsolate();
+    Isolate *isolate = Isolate::GetCurrent();
     StmtObject::Init(isolate);
     Connection::Init(isolate);
     NODE_SET_METHOD(exports, "createConnection", Connection::NewInstance);

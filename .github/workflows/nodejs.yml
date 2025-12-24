@@ -1,0 +1,91 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+
+jobs:
+  build:
+    name: Build and Test on Node ${{ matrix.node-version }} - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS ARM64 (Apple Silicon)
+          - os: macos-latest
+            node-version: 22.x
+          # macOS x64 (Intel)
+          - os: macos-14
+            node-version: 22.x
+          # Linux x64
+          - os: ubuntu-latest
+            node-version: 22.x
+          # Windows x64
+          - os: windows-latest
+            node-version: 22.x
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential python3
+
+    - name: Install dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        # Xcode Command Line Tools should be pre-installed
+
+    - name: Setup MSVC (Windows)
+      if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Install npm dependencies
+      run: npm install
+
+    - name: Check build logs on failure (Windows)
+      if: failure() && runner.os == 'Windows'
+      shell: bash
+      run: |
+        echo "=== NPM Install Output ==="
+        cat ~/.npm/_logs/*.log 2>/dev/null || echo "No npm logs found"
+
+    - name: Show build output
+      shell: bash
+      run: |
+        echo "Checking for native module..."
+        if [ -f "build/Release/sqlanywhere.node" ]; then
+          echo "✓ Native module found"
+          ls -lh build/Release/sqlanywhere.node
+          file build/Release/sqlanywhere.node || true
+        else
+          echo "✗ Native module NOT found"
+          echo "Build directory contents:"
+          ls -la build/ || echo "Build directory does not exist"
+        fi
+
+    - name: Run tests
+      run: npm test
+      continue-on-error: true
+      id: test
+
+    - name: Show test results
+      if: always()
+      shell: bash
+      run: |
+        if [ "${{ steps.test.outcome }}" == "success" ]; then
+          echo "✓ Tests passed"
+        else
+          echo "✗ Tests failed (may be expected if SQL Anywhere is not installed)"
+        fi

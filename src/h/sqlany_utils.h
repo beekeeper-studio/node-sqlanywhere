@@ -185,7 +185,7 @@ struct noParamBaton
     }
 };
 
-void executeAfter(uv_work_t *req);
+void executeAfter(uv_work_t *req, int status);
 void executeWork(uv_work_t *req);
 
 void HashToString(Isolate *isolate, Local<Object> obj, Persistent<String> &ret);
