@@ -2,7 +2,7 @@
   "author": "SQL ANYWHERE",
   "name": "sqlanywhere",
   "description": "SQL Anywhere JavaScript Driver.",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "repository": {
     "url": "https://github.com/sqlanywhere/node-sqlanywhere"
   },
@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "help": "^3.0.2",
-    "nan": "^2.24.0"
+    "nan": "^2.27.0"
   },
   "devDependencies": {
     "mocha": "^10.2.0"
