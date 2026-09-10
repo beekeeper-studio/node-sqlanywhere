@@ -7,35 +7,34 @@ on:
 
 jobs:
   build:
-    name: Build and Test with Electron ${{ matrix.electron-version }} - ${{ matrix.os }}
+    name: Build and Test with Electron ${{ matrix.electron-version }} on Node ${{ matrix.node-version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
-        electron-version: ['39.2.7']
+        os: [macos-latest, macos-14, ubuntu-latest, windows-latest]
+        electron-version: ['39.2.7', '44.3.0']
         include:
-          # macOS ARM64 (Apple Silicon)
-          - os: macos-latest
-            electron-version: '39.2.7'
-          # macOS x64 (Intel)
-          - os: macos-14
-            electron-version: '39.2.7'
-          # Linux x64
-          - os: ubuntu-latest
-            electron-version: '39.2.7'
-          # Windows x64
-          - os: windows-latest
-            electron-version: '39.2.7'
+          - electron-version: '39.2.7'
+            node-version: '22'
+          - electron-version: '44.3.0'
+            node-version: '24'
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
+    - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: ${{ matrix.node-version }}
+
+    - name: Show tool versions
+      shell: bash
+      run: |
+        node --version
+        npm --version
 
     - name: Install system dependencies (Linux)
       if: runner.os == 'Linux'

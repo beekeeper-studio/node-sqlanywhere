@@ -13,19 +13,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # macOS ARM64 (Apple Silicon)
-          - os: macos-latest
-            node-version: 22.x
-          # macOS x64 (Intel)
-          - os: macos-14
-            node-version: 22.x
-          # Linux x64
-          - os: ubuntu-latest
-            node-version: 22.x
-          # Windows x64
-          - os: windows-latest
-            node-version: 22.x
+        # macos-latest = ARM64 (Apple Silicon), macos-14 = x64 (Intel),
+        # ubuntu-latest = Linux x64, windows-latest = Windows x64
+        os: [macos-latest, macos-14, ubuntu-latest, windows-latest]
+        node-version: ['22', '24']
 
     steps:
     - name: Checkout code
@@ -35,6 +26,12 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+
+    - name: Show tool versions
+      shell: bash
+      run: |
+        node --version
+        npm --version
 
     - name: Install dependencies (Linux)
       if: runner.os == 'Linux'

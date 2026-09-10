@@ -7,58 +7,46 @@ on:
 
 jobs:
   build-arm64:
-    name: Build and Test on Node 22.x - Linux ARM64
-    runs-on: ubuntu-latest
+    name: Build and Test on Node ${{ matrix.node-version }} - Linux ARM64
+    runs-on: ubuntu-24.04-arm
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['22', '24']
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build and Test on ARM64
-      uses: uraimo/run-on-arch-action@v2
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
       with:
-        arch: aarch64
-        distro: ubuntu22.04
+        node-version: ${{ matrix.node-version }}
 
-        # Docker options to improve QEMU compatibility
-        dockerRunArgs: |
-          --platform linux/arm64/v8
+    - name: Show tool versions
+      run: |
+        node --version
+        npm --version
 
-        # Install dependencies in the container
-        install: |
-          apt-get update -q -y
-          apt-get install -q -y ca-certificates curl gnupg build-essential python3 git
-          # Install Node.js 22
-          mkdir -p /etc/apt/keyrings
-          curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-          echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-          apt-get update -q -y
-          apt-get install -q -y nodejs
-          node --version
-          npm --version
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential python3
 
-        # Run build and tests
-        run: |
-          echo "Running on ARM64 architecture"
-          node --version
-          npm --version
+    - name: Install npm dependencies
+      run: npm install
 
-          # Set environment variables to help with QEMU/node-gyp compatibility
-          export npm_config_jobs=1
-          export JOBS=1
+    - name: Run tests
+      run: npm test
 
-          echo "Installing dependencies..."
-          npm install
-
-          echo "Running tests..."
-          npm test
-
-          echo "Verifying native module..."
-          if [ -f "build/Release/sqlanywhere.node" ]; then
-            echo "✓ Native module built successfully"
-            ls -lh build/Release/sqlanywhere.node
-            file build/Release/sqlanywhere.node || true
-          else
-            echo "✗ Native module NOT found"
-            exit 1
-          fi
+    - name: Verify native module
+      run: |
+        if [ -f "build/Release/sqlanywhere.node" ]; then
+          echo "✓ Native module built successfully"
+          ls -lh build/Release/sqlanywhere.node
+          file build/Release/sqlanywhere.node || true
+        else
+          echo "✗ Native module NOT found"
+          exit 1
+        fi
