@@ -15,11 +15,20 @@ jobs:
       matrix:
         os: [macos-latest, macos-14, ubuntu-latest, windows-latest]
         electron-version: ['39.2.7', '44.3.0']
+        exclude:
+          # Electron 39 builds on Node 22, whose bundled node-gyp (11.5.0)
+          # cannot identify the Visual Studio 2026 on windows-latest.
+          - os: windows-latest
+            electron-version: '39.2.7'
         include:
           - electron-version: '39.2.7'
             node-version: '22'
           - electron-version: '44.3.0'
             node-version: '24'
+          # ...so that combination builds against VS 2022 on the older image.
+          - os: windows-2022
+            electron-version: '39.2.7'
+            node-version: '22'
 
     steps:
     - name: Checkout code
@@ -40,17 +49,13 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential python3 libgtk-3-dev libnotify-dev libnss3 libxss1 libasound2t64 || sudo apt-get install -y libasound2
+        sudo apt-get install -y xvfb build-essential python3 libgtk-3-dev libnotify-dev libnss3 libxss1 libasound2t64 || sudo apt-get install -y xvfb libasound2
 
     - name: Install system dependencies (macOS)
       if: runner.os == 'macOS'
       run: |
         # Xcode Command Line Tools should be pre-installed
         echo "macOS build tools ready"
-
-    - name: Setup MSVC (Windows)
-      if: runner.os == 'Windows'
-      uses: ilammy/msvc-dev-cmd@v1
 
     - name: Install npm dependencies
       run: npm install
@@ -62,7 +67,14 @@ jobs:
       run: npx @electron/rebuild --version ${{ matrix.electron-version }}
 
     - name: Run tests with Electron
-      run: npx electron-mocha --no-sandbox test/**/*.test.js --timeout 10000
+      shell: bash
+      run: |
+        # Electron needs a display; the Linux runners are headless.
+        RUN=()
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          RUN=(xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24")
+        fi
+        "${RUN[@]}" npx electron-mocha --no-sandbox test/**/*.test.js --timeout 10000
 
     - name: Show build output
       shell: bash
@@ -81,5 +93,10 @@ jobs:
     - name: Test module loading with Electron
       shell: bash
       run: |
+        RUN=()
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          RUN=(xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24")
+        fi
+        # --version prints without starting the GUI, so it needs no display.
         npx electron --no-sandbox --version
-        npx electron --no-sandbox test/electron-load-test.js
+        "${RUN[@]}" npx electron --no-sandbox test/electron-load-test.js

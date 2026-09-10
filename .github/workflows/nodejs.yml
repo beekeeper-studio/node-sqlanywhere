@@ -17,6 +17,16 @@ jobs:
         # ubuntu-latest = Linux x64, windows-latest = Windows x64
         os: [macos-latest, macos-14, ubuntu-latest, windows-latest]
         node-version: ['22', '24']
+        exclude:
+          # windows-latest ships Visual Studio 2026, which the node-gyp
+          # bundled with Node 22's npm (11.5.0) cannot identify - VS 18
+          # support landed in node-gyp 12.2.0. Node 24's npm ships 12.4.0.
+          - os: windows-latest
+            node-version: '22'
+        include:
+          # ...so Node 22 builds against VS 2022 on the older image instead.
+          - os: windows-2022
+            node-version: '22'
 
     steps:
     - name: Checkout code
@@ -43,10 +53,6 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         # Xcode Command Line Tools should be pre-installed
-
-    - name: Setup MSVC (Windows)
-      if: runner.os == 'Windows'
-      uses: ilammy/msvc-dev-cmd@v1
 
     - name: Install npm dependencies
       run: npm install
