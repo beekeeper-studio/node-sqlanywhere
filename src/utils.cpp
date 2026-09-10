@@ -974,9 +974,16 @@ Connection::Connection(const FunctionCallbackInfo<Value> &args)
 		if (args[0]->IsString())
 		{
 			MaybeLocal<String> str = args[0]->ToString(context);
-			int string_len = str.ToLocalChecked()->Utf8LengthV2(isolate);
+#if V8_MAJOR_VERSION > 13 || ( V8_MAJOR_VERSION == 13 && V8_MINOR_VERSION >= 6 )
+			size_t string_len = str.ToLocalChecked()->Utf8LengthV2(isolate);
 			char *buf = new char[string_len + 1];
-			str.ToLocalChecked()->WriteUtf8V2(isolate, buf, string_len, String::WriteFlags::kNullTerminate);
+			str.ToLocalChecked()->WriteUtf8V2(isolate, buf, string_len + 1,
+							  String::WriteFlags::kNullTerminate);
+#else
+			int string_len = str.ToLocalChecked()->Utf8Length(isolate);
+			char *buf = new char[string_len + 1];
+			str.ToLocalChecked()->WriteUtf8(isolate, buf);
+#endif
 			_arg.Reset(isolate, String::NewFromUtf8(isolate, buf).ToLocalChecked());
 			delete[] buf;
 		}
