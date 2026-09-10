@@ -7,72 +7,71 @@ on:
 
 jobs:
   build-arm64:
-    name: Build and Test with Electron 39.2.7 - Linux ARM64
-    runs-on: ubuntu-latest
+    name: Build and Test with Electron ${{ matrix.electron-version }} on Node ${{ matrix.node-version }} - Linux ARM64
+    runs-on: ubuntu-24.04-arm
+
+    strategy:
+      fail-fast: false
+      matrix:
+        electron-version: ['39.2.7', '44.3.0']
+        # Each Electron version builds against its own Node line, so Node is
+        # paired with the Electron version rather than varied independently.
+        include:
+          - electron-version: '39.2.7'
+            node-version: '22'
+          - electron-version: '44.3.0'
+            node-version: '24'
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build and Test Electron on ARM64
-      uses: uraimo/run-on-arch-action@v2
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
       with:
-        arch: aarch64
-        distro: ubuntu22.04
+        node-version: ${{ matrix.node-version }}
 
-        # Docker options to improve QEMU compatibility
-        dockerRunArgs: |
-          --platform linux/arm64/v8
+    - name: Show tool versions
+      run: |
+        node --version
+        npm --version
 
-        # Install dependencies in the container
-        install: |
-          apt-get update -q -y
-          apt-get install -q -y ca-certificates curl gnupg build-essential python3 git \
-            libglib2.0-0 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
-            libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 \
-            libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 \
-            libgtk-3-0 libasound2 libatspi2.0-0 libdbus-1-3
-          # Install Node.js 20 (for Electron build)
-          mkdir -p /etc/apt/keyrings
-          curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-          echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-          apt-get update -q -y
-          apt-get install -q -y nodejs
-          node --version
-          npm --version
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        # Ubuntu 24.04 renamed several of these with a t64 suffix (the 64-bit
+        # time_t transition); fall back to the old names on older releases.
+        sudo apt-get install -y build-essential python3 \
+          libgtk-3-0t64 libnss3 libasound2t64 libatspi2.0-0t64 libcups2t64 \
+          libnotify4 libxss1 libgbm1 libdrm2 \
+        || sudo apt-get install -y build-essential python3 \
+          libgtk-3-0 libnss3 libasound2 libatspi2.0-0 libcups2 \
+          libnotify4 libxss1 libgbm1 libdrm2
 
-        # Run build and tests
-        run: |
-          echo "Running on ARM64 architecture"
-          node --version
-          npm --version
+    - name: Install npm dependencies
+      run: npm install
 
-          # Set environment variables to help with QEMU/node-gyp compatibility
-          export npm_config_jobs=1
-          export JOBS=1
+    - name: Install Electron rebuild tools
+      run: npm install --save-dev @electron/rebuild electron@${{ matrix.electron-version }}
 
-          echo "Installing dependencies..."
-          npm install
+    - name: Rebuild for Electron
+      run: npx @electron/rebuild --version ${{ matrix.electron-version }}
 
-          echo "Installing Electron rebuild tools..."
-          npm install --save-dev @electron/rebuild electron@39.2.7
+    - name: Run tests with Electron (as Node)
+      run: ELECTRON_RUN_AS_NODE=1 npx electron node_modules/.bin/mocha test/**/*.test.js --timeout 10000
 
-          echo "Rebuilding for Electron..."
-          npx @electron/rebuild --version 39.2.7
+    - name: Verify native module
+      run: |
+        if [ -f "build/Release/sqlanywhere.node" ]; then
+          echo "✓ Native module built successfully"
+          ls -lh build/Release/sqlanywhere.node
+          file build/Release/sqlanywhere.node || true
+        else
+          echo "✗ Native module NOT found"
+          exit 1
+        fi
 
-          echo "Running tests with Electron (as Node)..."
-          ELECTRON_RUN_AS_NODE=1 npx electron node_modules/.bin/mocha test/**/*.test.js --timeout 10000
-
-          echo "Verifying native module..."
-          if [ -f "build/Release/sqlanywhere.node" ]; then
-            echo "✓ Native module built successfully"
-            ls -lh build/Release/sqlanywhere.node
-            file build/Release/sqlanywhere.node || true
-          else
-            echo "✗ Native module NOT found"
-            exit 1
-          fi
-
-          echo "Testing Electron module loading..."
-          ELECTRON_RUN_AS_NODE=1 npx electron --version
-          ELECTRON_RUN_AS_NODE=1 npx electron test/electron-load-test.js
+    - name: Test Electron module loading
+      run: |
+        ELECTRON_RUN_AS_NODE=1 npx electron --version
+        ELECTRON_RUN_AS_NODE=1 npx electron test/electron-load-test.js
